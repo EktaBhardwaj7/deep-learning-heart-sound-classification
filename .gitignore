@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Heart sound dataset - keep raw recordings out of Git
+data/physionet2016/
+*.wav
+*.hea
+*.tsv
