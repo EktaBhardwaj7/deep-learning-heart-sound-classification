@@ -1,0 +1,51 @@
+project:
+  name: heart_sound_mix
+  seed: 42
+  output_dir: results/mix_v2
+data:
+  yaseen_root: data/heart_sound_dataset
+  circor_root: data/circor
+  yaseen_csv: data/labels_yaseen.csv
+  circor_csv: data/labels_circor.csv
+  num_yaseen_classes: 5
+  num_circor_classes: 2
+  class_names_yaseen:
+  - AS
+  - MR
+  - MS
+  - MVP
+  - N
+  class_names_circor:
+  - Absent
+  - Present
+model:
+  base_channels: 32
+  dropout: 0.3
+training:
+  epochs: 60
+  batch_yaseen: 32
+  batch_circor: 32
+  num_workers: 2
+  grad_clip: 1.0
+  label_smoothing: 0.05
+  lambda_circor: 1.0
+  use_specaugment: true
+  optimizer:
+    name: adam
+    lr: 0.0003
+    weight_decay: 0.0001
+  scheduler:
+    name: cosine
+    t_max: 50
+    eta_min: 1.0e-05
+  early_stopping:
+    enabled: true
+    patience: 15
+  freeze_backbone_epochs: 3
+checkpoint:
+  dir: checkpoints/mix_v2
+  resume: null
+logging:
+  level: INFO
+  log_file: results/mix_v2/train.log
+  tensorboard: true

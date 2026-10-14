@@ -1,0 +1,80 @@
+# ---------------------------------------------------------------------------
+# Heart Sound Classification - Experiment Configuration
+# ---------------------------------------------------------------------------
+# Switch representation with:
+#   raw     -> 1D waveform pipeline  (cnn1d, resnet1d)
+#   logmel  -> Log-Mel spectrogram   (cnn2d, attention_cnn2d, crnn, bilstm, transformer)
+# ---------------------------------------------------------------------------
+
+project:
+  name: heart_sound_yaseen
+  seed: 42
+  output_dir: results
+
+data:
+  dataset_root: data/heart_sound_dataset
+  labels_csv: data/labels.csv
+  num_classes: 5
+  class_names: [AS, MR, MS, MVP, N]
+  sample_rate: 8000
+  duration: 5.0           # seconds; pad/crop every clip to this length
+  train_split: 0.70
+  val_split: 0.15
+  test_split: 0.15
+  num_workers: 2
+  pin_memory: true
+  patient_level_split: false   # Yaseen has no subject IDs; documented limitation
+
+features:
+  representation: logmel      # raw | logmel
+  apply_bandpass: true
+  normalize: true             # z-score using train-only statistics
+  # log-mel parameters (used only when representation == logmel)
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 256
+  win_length: 512
+  fmin: 20
+  fmax: 4000
+
+model:
+  name: cnn2d                  # cnn1d | resnet1d | cnn2d | attention_cnn2d | crnn | bilstm | transformer
+  dropout: 0.3
+  base_channels: 32
+  hidden_dim: 128
+  num_layers: 2
+  nhead: 4
+  dim_feedforward: 256
+
+training:
+  epochs: 60
+  batch_size: 32
+  grad_clip: 1.0
+  mixed_precision: true
+  optimizer:
+    name: adam
+    lr: 0.0005
+    weight_decay: 0.0001
+  scheduler:
+    name: cosine
+    t_max: 60
+    eta_min: 0.00001
+    step_size: 20
+    gamma: 0.5
+  loss:
+    name: cross_entropy
+    label_smoothing: 0.05
+  early_stopping:
+    enabled: true
+    patience: 12
+    monitor: val_macro_f1
+    mode: max
+
+checkpoint:
+  dir: checkpoints
+  resume: null                # e.g. checkpoints/last.pth
+
+logging:
+  level: INFO
+  log_file: results/train.log
+  tensorboard: true

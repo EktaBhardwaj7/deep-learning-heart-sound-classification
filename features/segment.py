@@ -1,30 +1,31 @@
+"""Segment a fixed-length window from a feature map."""
+from __future__ import annotations
+
 import numpy as np
 
 
-def segment_feature(feature, sample_rate=2000, duration=5, hop_ms=15):
+def segment_feature(feature: np.ndarray,
+                    segment_frames: int | None = None,
+                    training: bool = False,
+                    rng: np.random.Generator | None = None) -> np.ndarray:
+    """Crop or pad the time axis to `segment_frames`.
+
+    feature : (F, T) or (T,)
     """
-    Extract a fixed-duration segment from a Log-Mel feature.
+    if segment_frames is None or feature.shape[-1] == segment_frames:
+        return feature
 
-    Parameters:
-        feature: Log-Mel spectrogram of shape (mel_bins, time_frames)
-        sample_rate: original audio sampling rate
-        duration: segment duration in seconds
-        hop_ms: hop length used during Log-Mel extraction
+    t = feature.shape[-1]
+    if t > segment_frames:
+        if training:
+            rng = rng or np.random.default_rng()
+            start = int(rng.integers(0, t - segment_frames + 1))
+        else:
+            start = (t - segment_frames) // 2
+        return feature[..., start:start + segment_frames]
 
-    Returns:
-        Fixed-size feature segment
-    """
-
-    # Number of time frames needed for the required duration
-    frames = int(duration * 1000 / hop_ms)
-
-    # If feature is already shorter than required,
-    # repeat it until it becomes long enough
-    if feature.shape[1] < frames:
-        repeat_count = int(np.ceil(frames / feature.shape[1]))
-        feature = np.tile(feature, (1, repeat_count))
-
-    # Take the first fixed-length segment
-    segment = feature[:, :frames]
-
-    return segment.astype(np.float32)
+    pad = segment_frames - t
+    left = pad // 2
+    right = pad - left
+    pad_width = [(0, 0)] * (feature.ndim - 1) + [(left, right)]
+    return np.pad(feature, pad_width, mode="constant")
