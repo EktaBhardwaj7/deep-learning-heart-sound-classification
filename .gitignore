@@ -35,3 +35,6 @@ results/*/*.npy
 
 # Logs
 *.log
+
+# Third-party reference repo
+AutomaticHeartSoundClassification/
