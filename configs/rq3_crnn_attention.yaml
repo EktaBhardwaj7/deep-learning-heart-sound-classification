@@ -1,0 +1,4 @@
+# RQ3, temporal model with attention pooling. Compare with joint_main (CNN baseline).
+extends: base.yaml
+project: {name: rq3_crnn_attention}
+model: {name: crnn, pooling: attention, hidden_dim: 128}

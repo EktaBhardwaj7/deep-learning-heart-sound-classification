@@ -1,40 +1,13 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[codz]
-*$py.class
-
-# Virtual environment
-venv/
-env/
-.venv/
-
-# Datasets - keep raw audio out of Git
-data/circor/
-data/heart_sound_dataset/
-data/physionet2016/
-*.wav
-*.hea
-*.tsv
-
-# Model checkpoints (large binaries)
+*.pyc
+.pytest_cache/
+# data: never commit
+data/
+cache/
+# outputs
+runs/
 checkpoints/
+*.onnx
+*.npy
 *.pth
-
-# Training outputs (TensorBoard binaries, plots)
-results/*/tb/
-results/*/*.png
-results/*/*.npy
-
-# Keep small JSON metrics but not the whole results dir
-!results/*/*.json
-
-# IDE / OS
-.vscode/
-.idea/
-.DS_Store
-
-# Logs
 *.log
-
-# Third-party reference repo
-AutomaticHeartSoundClassification/

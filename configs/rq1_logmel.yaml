@@ -1,0 +1,15 @@
+# RQ1, Log-Mel branch. Yaseen only, 2-D residual network.
+extends: base.yaml
+project: {name: rq1_logmel}
+data: {tasks: [yaseen]}
+features: {representation: logmel}
+model: {name: cnn2d, base_channels: 32}   # 582,304 backbone params; raw branch 543,096
+train:
+  epochs: 80
+  loss_weight: {yaseen: 1.0}
+  freeze_epochs: 0
+  backbone_lr_mult: 1.0
+  optimizer: {name: adamw, lr: 5.0e-4, weight_decay: 1.0e-4}
+  ema: {enabled: true, decay: 0.98}
+  monitor_weights: {yaseen: 1.0}
+  early_stopping: {enabled: true, patience: 20, min_delta: 1.0e-4}

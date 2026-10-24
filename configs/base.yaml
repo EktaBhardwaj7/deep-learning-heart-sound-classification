@@ -1,0 +1,82 @@
+# Base configuration. Experiment files override only what differs (via `extends`).
+project:
+  name: base
+  seed: 42
+  runs_dir: runs            # outputs: runs/<name>/
+  checkpoint_dir: checkpoints
+  device: auto              # auto | cpu | cuda
+
+data:
+  root: data                # all dataset paths are relative to this folder
+  yaseen_dir: heart_sound_dataset          # data/heart_sound_dataset/{AS,MR,MS,MVP,N}/...
+  circor_dir: circor                       # data/circor/ (wav files found recursively)
+  circor_meta: circor/training_data.csv
+  tasks: [yaseen, circor]
+  class_names:
+    yaseen: [AS, MR, MS, MVP, N]
+    circor: [Absent, Present]
+  sample_rate: 4000
+  segment_seconds: 5.0
+  circor_hop_seconds: 2.5                  # 50 % overlap for CirCor windows
+  bandpass: [25, 1000]                     # set to null to disable
+  min_duration_seconds: 0.5
+  nonmurmur_site_policy: absent            # absent | exclude
+  yaseen_split: [0.8, 0.1]                 # train, val (test = remainder); by recording
+  circor_split: [0.7, 0.15]                # train, val (test = remainder); by patient
+  cache_dir: cache                         # resampled waveforms (memory-mapped)
+
+features:
+  representation: logmel                   # logmel | raw
+  n_mels: 64
+  n_fft: 256
+  hop_length: 128
+  win_length: 256
+  fmin: 20
+  fmax: 2000
+  time_jitter_seconds: 0.5                 # random window shift during training
+  specaugment: {enabled: true, freq_mask: 8, time_mask: 16, num_freq: 2, num_time: 2}
+  raw_augment: {enabled: true, gain: 0.2, noise_std: 0.02}
+
+model:
+  name: resnet2d        # cnn1d | resnet1d | cnn2d | resnet2d | crnn | bilstm | transformer
+  base_channels: 32
+  hidden_dim: 128
+  num_layers: 2
+  nhead: 4
+  dim_feedforward: 256
+  pooling: mean         # mean | attention (sequence models only)
+  dropout: 0.3          # before each head
+  block_dropout: 0.1    # inside residual blocks; keeps MC-Dropout meaningful
+
+train:
+  epochs: 60
+  batch_size: {yaseen: 32, circor: 32}
+  num_workers: 1
+  amp: true
+  grad_clip: 1.0
+  label_smoothing: 0.05
+  class_weights: balanced               # balanced | none
+  loss_weight: {yaseen: 1.0, circor: 1.0}
+  exposure: epoch                        # epoch | alternate
+  freeze_epochs: 3
+  backbone_lr_mult: 0.1                  # backbone learning rate = head rate x this
+  optimizer: {name: adamw, lr: 2.0e-4, weight_decay: 1.0e-4}
+  warmup_epochs: 2
+  eta_min: 1.0e-6
+  ema: {enabled: true, decay: 0.999}
+  monitor_weights: {yaseen: 0.4, circor: 0.6}
+  early_stopping: {enabled: true, patience: 15, min_delta: 1.0e-4}
+
+eval:
+  aggregation: auto                      # auto (chosen on validation) | mean | max | median | noisy_or | vote
+  min_sensitivity: 0.90                  # operating point for CirCor, threshold chosen on validation
+  temperature_min_windows: 300           # no temperature scaling below this many validation windows
+  bootstrap: 1000
+  mc_samples: 30
+  triage: {npv_target: 0.95, ppv_target: 0.80, min_recordings: 5}   # thresholds are chosen on validation
+  noise_kinds: [white, pink, hum]
+  noise_snrs_db: [20, 10, 5, 0, -5]
+  explain: {max_samples: 60, figures: 6, deletion_fractions: [0.05, 0.10, 0.20]}
+
+export:
+  quantize_int8: true

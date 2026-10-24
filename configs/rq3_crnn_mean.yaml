@@ -1,0 +1,3 @@
+extends: base.yaml
+project: {name: rq3_crnn_mean}
+model: {name: crnn, pooling: mean, hidden_dim: 128}

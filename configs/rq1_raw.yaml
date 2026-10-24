@@ -1,0 +1,5 @@
+# RQ1, raw-waveform branch. Same protocol as rq1_logmel.yaml; only input and backbone differ.
+extends: rq1_logmel.yaml
+project: {name: rq1_raw}
+features: {representation: raw}
+model: {name: resnet1d, base_channels: 24}

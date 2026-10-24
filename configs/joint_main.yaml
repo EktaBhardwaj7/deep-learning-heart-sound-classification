@@ -1,0 +1,2 @@
+extends: base.yaml
+project: {name: joint_main, runs_dir: runs}
